@@ -1,10 +1,11 @@
 const { NotFound } = require("http-errors");
 
-const contactsOperations = require("../models/contacts");
-const ctrlWrapper = require("../helpers/ctrlWrapper");
+const { Contact } = require("../models/contact");
+
+const { ctrlWrapper } = require("../helpers");
 
 const getAll = async (req, res) => {
-  const contacts = await contactsOperations.listContacts();
+  const contacts = await Contact.find();
   res.json({
     status: "success",
     code: 200,
@@ -16,12 +17,10 @@ const getAll = async (req, res) => {
 
 const getById = async (req, res) => {
   const { contactId } = req.params;
-  const result = await contactsOperations.getContactById(contactId);
-
+  const result = await Contact.findById(contactId);
   if (!result) {
     throw new NotFound(`Product with id=${contactId} not found`);
   }
-
   res.json({
     status: "success",
     code: 200,
@@ -32,11 +31,7 @@ const getById = async (req, res) => {
 };
 
 const add = async (req, res) => {
-  const result = await contactsOperations.addContact(
-    req.body.name,
-    req.body.email,
-    req.body.phone
-  );
+  const result = await Contact.create(req.body);
   res.status(201).json({
     status: "success",
     code: 201,
@@ -48,7 +43,26 @@ const add = async (req, res) => {
 
 const updateById = async (req, res) => {
   const { contactId } = req.params;
-  const result = await contactsOperations.updateContact(contactId, req.body);
+  const result = await Contact.findByIdAndUpdate(contactId, req.body, {
+    new: true,
+  });
+  if (!result) {
+    throw new NotFound(`Product with id=${contactId} not found`);
+  }
+  res.json({
+    status: "success",
+    code: 200,
+    data: {
+      result,
+    },
+  });
+};
+
+const updateStatusContact = async (req, res) => {
+  const { contactId } = req.params;
+  const result = await Contact.findByIdAndUpdate(contactId, req.body, {
+    new: true,
+  });
   if (!result) {
     throw new NotFound(`Product with id=${contactId} not found`);
   }
@@ -63,7 +77,7 @@ const updateById = async (req, res) => {
 
 const deleteById = async (req, res) => {
   const { contactId } = req.params;
-  const result = await contactsOperations.removeContact(contactId);
+  const result = await Contact.findByIdAndRemove(contactId);
   if (!result) {
     throw new NotFound(`Product with id=${contactId} not found`);
   }
@@ -82,5 +96,6 @@ module.exports = {
   getById: ctrlWrapper(getById),
   add: ctrlWrapper(add),
   updateById: ctrlWrapper(updateById),
+  updateStatusContact: ctrlWrapper(updateStatusContact),
   deleteById: ctrlWrapper(deleteById),
 };
