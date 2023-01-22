@@ -70,14 +70,17 @@ const logout = async (req, res) => {
   });
 };
 
-const avatarDir = path.join(__dirname, "../", "public", "avatars");
+const avatarDir = path.join(__dirname, "../../", "public", "avatars");
 const updateAvatar = async (req, res) => {
   const { _id } = req.user;
-
+  if (!req.file) {
+    throw HttpError(400, "Avatar not attach");
+  }
   const { path: tempUpload, originalname } = req.file;
-  const resultUpload = path.join(avatarDir, originalname);
+  const filename = `${_id}_${originalname}`;
+  const resultUpload = path.join(avatarDir, filename);
   await fs.rename(tempUpload, resultUpload);
-  const avatarURL = path.join("avatars", originalname);
+  const avatarURL = path.join("avatars", filename);
   await User.findByIdAndUpdate(_id, { avatarURL });
 
   res.json({
